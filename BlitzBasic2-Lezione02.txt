@@ -1,0 +1,47 @@
+WBStartup
+
+#SPRITES=8
+#BITPLANES=3
+#COLORS=32
+
+#COPPERLIST=0
+#TOPCOPPER=44
+#BOTTOMCOPPER=256
+
+;CopperList Data
+#THREEBITPLANES=$03
+#LOWRESSPRITES=$400
+#CopperData=#THREEBITPLANES+#LOWRESSPRITES
+
+BLITZ
+
+;Copperlist
+InitCopList #COPPERLIST,#TOPCOPPER,#BOTTOMCOPPER,#CopperData,#SPRITES,#COLORS,0
+BitMap 0,320,256,3
+BitMap 1,320,256,3
+DisplayBitMap 0,0
+
+;Palette settings
+PalRGB 0,0,0,0,0
+PalRGB 0,1,15,0,0
+PalRGB 0,2,15,0,0
+
+DisplayPalette 0,0
+
+Queue 0,30
+Queue 1,30
+
+Use BitMap 0
+Boxf 0,0,32,32,2
+GetaShape 0,0,0,32,32
+Cls
+CreateDisplay 0
+
+While Joyb(0)=0
+  VWait
+  DisplayBitMap 0,db:db=1-db:Use BitMap db:UnQueue db
+
+  movex+1
+  movex=QWrap(movex,10,200)
+  QBlit db,0,movex,100
+Wend
