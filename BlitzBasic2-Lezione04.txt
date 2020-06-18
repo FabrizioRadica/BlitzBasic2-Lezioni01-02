@@ -1,0 +1,91 @@
+;BBLIT Tutorial
+
+WBStartup
+
+#SPRITES=8
+#BITPLANES=5 ; 5Bitplanes = 32 colors
+#COLORS=32
+
+#COPPERLIST=0
+#TOPCOPPER=44
+#BOTTOMCOPPER=256
+
+;CopperList Data
+#THREEBITPLANES=$05
+#LOWRESSPRITES=$400
+#CopperData=#THREEBITPLANES+#LOWRESSPRITES
+
+
+;********************
+;DATI GIOCO
+
+;Struttura dati Player
+;+ membri della struttura
+NEWTYPE .player
+  x.w
+  y.w
+  speed.w
+End NEWTYPE
+DEFTYPE .player Player
+Player\speed=2
+
+
+
+BitMap 0,320,256,#BITPLANES
+Boxf 0,0,32,32,2
+GetaShape 0,0,0,32,32
+GetaShape 1,0,0,32,32
+
+LoadBitMap 0,"fondale.iff"
+LoadPalette 0,"fondale.iff"
+
+BitMap 1,320,256,#BITPLANES
+CopyBitMap 0,1
+
+;Buffer per i Bobs gestiti da BBLIT (registano il fondalee lo ridisegnano)
+Buffer 0,2000
+Buffer 1,2000
+
+;Copperlist
+InitCopList #COPPERLIST,#TOPCOPPER,#BOTTOMCOPPER,#CopperData,#SPRITES,#COLORS,0
+DisplayBitMap 0,0
+
+;Palette settings
+;PalRGB 0,0,0,0,0
+;PalRGB 0,1,15,0,0
+;PalRGB 0,2,15,0,0
+
+DisplayPalette 0,0
+
+;Finalmente mostro a video
+BLITZ
+CreateDisplay 0,0
+
+sx=5
+sy=5
+
+While Joyb(0)=0
+
+  ;DoubleBuffer
+  VWait
+  DisplayBitMap 0,db:db=1-db:Use BitMap db:UnBuffer db
+
+  Player\x+Joyx(1)*Player\speed
+  Player\y+Joyy(1)*Player\speed
+  Player\x = QLimit(Player\x,64,232)
+  Player\y = QLimit(Player\y,16,256-16)
+
+  BBlit db,0,Player\x,Player\y
+
+  vx+sx
+  vy+sy
+  If vx<2 OR vx>320-40 Then sx=-sx
+  If vy<2 OR vy>256-40 Then sy=-sy
+  BBlit db,1,vx,vy
+
+
+  BitMapOutput db
+
+  Locate 1,1:Print a
+
+Wend

@@ -1,0 +1,65 @@
+WBStartup
+
+#SPRITES=8
+#BITPLANES=4  ; ovvero 2 elevato ad N (in questo caso 4)
+#COLORS=16    ; quindi 16 colori a video
+
+#COPPERLIST=0
+#TOPCOPPER=44
+#BOTTOMCOPPER=256
+
+;CopperList Data
+#CopperBITPLANES=$04
+#LOWRESSPRITES=$400
+#CopperData=#CopperBITPLANES+#LOWRESSPRITES
+
+
+;********************
+;DATI GIOCO
+
+NEWTYPE .player
+  x.w
+  y.w
+  speed.w
+End NEWTYPE
+DEFTYPE .player Player
+Player\speed=2
+
+
+;Copperlist
+InitCopList #COPPERLIST,#TOPCOPPER,#BOTTOMCOPPER,#CopperData,#SPRITES,#COLORS,0
+BitMap 0,320,256,#BITPLANES
+BitMap 1,320,256,#BITPLANES
+DisplayBitMap 0,0
+
+;Palette settings
+PalRGB 0,0,0,0,0
+PalRGB 0,1,15,0,0
+PalRGB 0,2,15,0,0
+
+DisplayPalette 0,0
+
+Queue 0,30
+Queue 1,30
+
+Use BitMap 0
+Boxf 0,0,32,32,2
+GetaShape 0,0,0,32,32
+Cls
+
+BLITZ
+CreateDisplay 0
+
+While Joyb(0)=0
+
+  ;DoubleBuffer
+  VWait
+  DisplayBitMap 0,db:db=1-db:Use BitMap db:UnQueue db
+
+  Player\x+Joyx(1)*Player\speed
+  Player\y+Joyy(1)*Player\speed
+  Player\x = QLimit(Player\x,64,232)
+  Player\y = QLimit(Player\y,16,256-16)
+
+  QBlit db,0,Player\x,Player\y
+Wend
