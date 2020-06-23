@@ -1,0 +1,119 @@
+;*****************************
+;SHOOT'EM'UP ENGINE June 2020
+;By FABRIZIO RADICA
+;*****************************
+
+WBStartup
+
+DEFTYPE .w
+
+;Static var
+#MAXBULLETS = 8
+#SCREENW    = 320
+#SCREENH    = 200
+#XLIMIT     = #SCREENW-16
+#YLIMIT     = #SCREENH-16
+
+;Structs
+NEWTYPE .player
+  x.w
+  y.w
+  speed.w
+  active.w
+  gun.w
+End NEWTYPE
+DEFTYPE .player player
+player\x=#SCREENW/2
+player\y=#SCREENH/2
+
+NEWTYPE .bullet
+  x.w
+  y.w
+  speed.w
+  active.w
+End NEWTYPE
+Dim List bullet.bullet(#MAXBULLETS)
+For i=0 To #MAXBULLETS-1
+  bullet(i)\active=False
+Next
+
+;Init
+;Open Bitamp 0
+BitMap 0,#SCREENW,#SCREENH,3
+
+;Player bob
+Boxf 0,0,16,16,4
+GetaShape 0,0,0,16,16
+
+;bullet bob
+Boxf 0,0,4,4,5
+GetaShape 1,0,0,4,4
+
+LoadBitMap 0,"assets/background.iff",0
+
+;Open Bitmap 1 (for double buffer)
+BitMap 1,#SCREENW,#SCREENH,3
+
+;copy bitmap 0 to 1 (for double buffer)
+CopyBitMap 0,1
+
+;Buffer for bob (one for double buffer)
+Buffer 0,4098*4
+Buffer 1,4098*4
+
+InitCopList 0,44,#SCREENH,$03,8,8,0
+DisplayBitMap 0,0
+PalRGB 0,0,0,0,0
+DisplayPalette 0,0
+
+;let's start
+BLITZ
+CreateDisplay 0
+
+;Functions
+Function StartBullet{#MAXBULLETS}
+SHARED bullet(),player,bc
+       bullet(bc)\active=True
+       bullet(bc)\x=player\x+6
+       bullet(bc)\y=player\y
+       bc=QWrap(bc+1,0,#MAXBULLETS-1)
+End Function
+
+Function MovePlayer{speed}
+SHARED player,mx,my,db
+    .player
+    player\x+Joyx(1) LSL speed
+    player\y+Joyy(1) LSL speed
+    player\x=QLimit(player\x,0,#XLIMIT)
+    player\y=QLimit(player\y,0,#YLIMIT)
+    BBlit db,0,player\x,player\y
+End Function
+
+
+While Joyb(0)=0
+    VWait
+    DisplayBitMap 0,db:db=1-db:Use BitMap db:UnBuffer db
+
+    MovePlayer{1}
+
+    .joypad
+    If Joyb(1)=1 AND tmpj=0
+        StartBullet{7}
+    EndIf
+    tmpj=Joyb(1)
+
+    .bullet
+    For i=0 To #MAXBULLETS-1
+      If bullet(i)\active
+        If bullet(i)\y>8
+          bullet(i)\y-8
+        Else
+          bullet(i)\active=False
+        EndIf
+        BBlit db,1,bullet(i)\x,bullet(i)\y
+      EndIf
+    Next
+
+Wend
+End
+
